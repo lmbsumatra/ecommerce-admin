@@ -1,0 +1,28 @@
+[Creating Project]
+1. create next-app .
+2. 
+3. npm run build
+4. npm start
+5. npm install -D tailwindcss postcss autoprefixer
+6. npx tailwindcss init -p
+7. follow tutorial here: https://tailwindcss.com/docs/guides/nextjs
+8/ npm install next-auth
+8. follow this: https://next-auth.js.org/
+
+
+
+[MongoDB]
+1. npm install @auth/mongodb-adapter mongodb
+2. mkdir /lib/ add file mongodb.js
+import NextAuth from "next-auth"
+import { MongoDBAdapter } from "@auth/mongodb-adapter"
+import clientPromise from "./lib/db"
+ 
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: MongoDBAdapter(clientPromise),
+})
+3. remove:  Promise<MongoClient>
+4. pw: RprydCqlVO2OMy6r
+5. URI: mongodb+srv://lmbsumatraintech:RprydCqlVO2OMy6r@cluster0.yagtxxy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+6. npm install dotenv
+7. .env.local
