@@ -7,7 +7,7 @@ import { mongooseConnect } from "@/lib/mongoose";
 
 const owner = 'lmbsumatra';
 const repo = 'ecommerce-admin';
-const branch = 'main'; // Or any other branch you want to use
+const branch = 'master'; // Or any other branch you want to use
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
