@@ -32,6 +32,27 @@ export default function ProductForm({
   if (goToProducts) {
     router.push("/products");
   }
+
+  async function uploadImages(event) {
+    console.log("File input event:", event);
+
+    const files = event.target?.files;
+    if (files?.length > 0) {
+      const data = new FormData();
+      for (const file of files) {
+        data.append("file", file);
+      }
+      const res = await fetch("/api/upload", {
+        method: 'POST',
+        body: data,
+      });
+      console.log(res.data);
+    }
+  }
+
+  // Debugging log to check if the component is rendering correctly
+  console.log("Rendering ProductForm component");
+
   return (
     <form onSubmit={saveProduct}>
       <label>Product Name</label>
@@ -43,9 +64,8 @@ export default function ProductForm({
       />
 
       <label>Photos</label>
-
       <div className="mb-2">
-        <label className="size-32 border text-center flex items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200">
+        <label className="size-32 border text-center flex items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200 cursor-pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -61,7 +81,7 @@ export default function ProductForm({
             />
           </svg>
           <div>Upload</div>
-          <input type="file" className="hidden" />
+          <input type="file" onChange={uploadImages} className="hidden" />
         </label>
         {!images?.length && <div>No photos in this product</div>}
       </div>

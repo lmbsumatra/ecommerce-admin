@@ -55,3 +55,5 @@ my-nextjs-project/
 2. npm install axios
 3. npm install mongoose
 4. npm install @next-auth/mongodb-adapter --legacy-peer-deps
+5. npm install multiparty --legacy-peer-deps
+6. npm install @octokit/rest --legacy-peer-deps
