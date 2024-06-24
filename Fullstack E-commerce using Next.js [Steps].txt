@@ -57,3 +57,5 @@ my-nextjs-project/
 4. npm install @next-auth/mongodb-adapter --legacy-peer-deps
 5. npm install multiparty --legacy-peer-deps
 6. npm install @octokit/rest --legacy-peer-deps
+
+[octokit on other file with local upload]

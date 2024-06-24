@@ -1,0 +1,217 @@
+Step 1: Set Up a Personal Access Token
+a. You need a GitHub personal access token to authenticate API requests. 
+b. Create a token with repo and public_repo scopes.
+c. Go to GitHub settings.
+d. Generate a new token with the required scopes.
+e. Make repository public
+
+Step 2: Install Dependencies
+a. You need octokit to interact with GitHub's API. Install it using npm:
+b. npm install @octokit/rest
+
+Step 3: Update Your API Route to Use GitHub
+Here is an example of how to update your API route to upload images to a GitHub repository:
+
+import multiparty from 'multiparty';
+import { Octokit } from '@octokit/rest';
+import fs from 'fs';
+import path from 'path';
+import { mongooseConnect } from "@/lib/mongoose";
+
+const owner = 'your-github-username';
+const repo = 'your-github-repo';
+const branch = 'main'; // Or any other branch you want to use
+
+const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN,
+});
+
+export default async function handle(req, res) {
+  await mongooseConnect();
+
+  const form = new multiparty.Form();
+  const { fields, files } = await new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      resolve({ fields, files });
+    });
+  });
+
+  const links = [];
+  for (const file of files.file) {
+    const fileContent = fs.readFileSync(file.path);
+    const ext = path.extname(file.originalFilename);
+    const newFilename = `${Date.now()}${ext}`;
+    const filePath = `images/${newFilename}`;
+
+    // Get the SHA of the file if it already exists (required for updating a file)
+    let sha;
+    try {
+      const { data: existingFile } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+      });
+      sha = existingFile.sha;
+    } catch (error) {
+      // File does not exist
+    }
+
+    // Create or update the file
+    await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: filePath,
+      message: `Upload ${newFilename}`,
+      content: fileContent.toString('base64'),
+      branch,
+      sha, // Include sha only if updating an existing file
+    });
+
+    const link = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+    links.push(link);
+  }
+
+  return res.json({ links });
+}
+
+export const config = {
+  api: { bodyParser: false },
+};
+Step 4: Configure Environment Variables
+Create a .env.local file in your project root and add your GitHub token:
+
+GITHUB_TOKEN=your_github_token
+
+
+[local upload]
+Step 1: Set Up the API Route
+Install necessary dependencies: Ensure you have multiparty installed for parsing form data.
+
+npm install multiparty
+Create an API route: Update your existing API route to save uploaded files to a local directory.
+
+Step 2: Update Your API Route to Handle File Uploads
+Here's an example of how to handle file uploads locally in a Next.js API route:
+
+import multiparty from 'multiparty';
+import fs from 'fs';
+import path from 'path';
+import { promisify } from 'util';
+import { mongooseConnect } from "@/lib/mongoose";
+import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
+
+const uploadDir = path.join(process.cwd(), 'uploads');
+const mkdir = promisify(fs.mkdir);
+const writeFile = promisify(fs.writeFile);
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export default async function handle(req, res) {
+  await mongooseConnect();
+  await isAdminRequest(req, res);
+
+  const form = new multiparty.Form();
+
+  const { fields, files } = await new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      resolve({ fields, files });
+    });
+  });
+
+  // Ensure upload directory exists
+  if (!fs.existsSync(uploadDir)) {
+    await mkdir(uploadDir);
+  }
+
+  const links = [];
+  for (const file of files.file) {
+    const ext = path.extname(file.originalFilename);
+    const newFilename = `${Date.now()}${ext}`;
+    const filePath = path.join(uploadDir, newFilename);
+
+    // Save the file to the upload directory
+    const fileContent = fs.readFileSync(file.path);
+    await writeFile(filePath, fileContent);
+
+    // Create a link to the uploaded file
+    const link = `/uploads/${newFilename}`;
+    links.push(link);
+  }
+
+  return res.json({ links });
+}
+Step 3: Serve the Uploaded Files
+To serve the uploaded files, you need to create a custom server in Next.js or use middleware to serve static files from the uploads directory.
+
+Using Middleware:
+
+You can use next-connect to serve static files in your Next.js API routes.
+
+npm install next-connect
+Update your pages/api folder:
+
+// pages/api/uploads/[filename].js
+import path from 'path';
+import { promises as fs } from 'fs';
+import { NextApiRequest, NextApiResponse } from 'next';
+
+const uploadDir = path.join(process.cwd(), 'uploads');
+
+export default async (req, res) => {
+  const { filename } = req.query;
+  const filePath = path.join(uploadDir, filename);
+
+  try {
+    const fileContent = await fs.readFile(filePath);
+    res.setHeader('Content-Type', mime.getType(filePath));
+    res.send(fileContent);
+  } catch (err) {
+    res.status(404).send('File not found');
+  }
+};
+Custom Server:
+
+If you prefer to use a custom server, here's an example using Express:
+
+npm install express
+Create a server.js file at the root of your project:
+
+const express = require('express');
+const next = require('next');
+const path = require('path');
+
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
+
+app.prepare().then(() => {
+  const server = express();
+
+  // Serve files from the 'uploads' directory
+  server.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+  server.all('*', (req, res) => {
+    return handle(req, res);
+  });
+
+  const port = process.env.PORT || 3000;
+  server.listen(port, (err) => {
+    if (err) throw err;
+    console.log(`> Ready on http://localhost:${port}`);
+  });
+});
+Update your package.json to use the custom server:
+
+{
+  "scripts": {
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js"
+  }
+}

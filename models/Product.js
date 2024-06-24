@@ -13,6 +13,7 @@ const ProductSchema = new Schema({
     type: Number,
     required: true,
   },
+  images: [{ type: String }],
 });
 
 // Check if the model already exists before defining it

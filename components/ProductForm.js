@@ -7,17 +7,18 @@ export default function ProductForm({
   title: existingTitle,
   description: existingDescription,
   price: existingPrice,
-  images,
+  images: existingImages,
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
+  const [images, setImages] = useState(existingImages || []);
   const [goToProducts, setGoToProducts] = useState(false);
 
   async function saveProduct(event) {
     event.preventDefault();
-    const data = { title, description, price };
+    const data = { title, description, price, images };
     if (_id) {
       // update
       await axios.put("/api/products", { ...data, _id });
@@ -34,24 +35,18 @@ export default function ProductForm({
   }
 
   async function uploadImages(event) {
-    console.log("File input event:", event);
-
     const files = event.target?.files;
     if (files?.length > 0) {
       const data = new FormData();
       for (const file of files) {
         data.append("file", file);
       }
-      const res = await fetch("/api/upload", {
-        method: 'POST',
-        body: data,
+      const res = await axios.post("/api/upload", data);
+      setImages((oldImages) => {
+        return [...oldImages, ...res.data.links];
       });
-      console.log(res.data);
     }
   }
-
-  // Debugging log to check if the component is rendering correctly
-  console.log("Rendering ProductForm component");
 
   return (
     <form onSubmit={saveProduct}>
@@ -64,7 +59,13 @@ export default function ProductForm({
       />
 
       <label>Photos</label>
-      <div className="mb-2">
+      <div className="mb-2 flex flex-wrap gap-2">
+        {!!images?.length &&
+          images.map((link) => (
+            <div key={link} className="h-24">
+              <img src={link} className="rounded-lg" />
+            </div>
+          ))}
         <label className="size-32 border text-center flex items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200 cursor-pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
