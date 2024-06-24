@@ -14,15 +14,44 @@
 [MongoDB]
 1. npm install @auth/mongodb-adapter mongodb
 2. mkdir /lib/ add file mongodb.js
-import NextAuth from "next-auth"
-import { MongoDBAdapter } from "@auth/mongodb-adapter"
-import clientPromise from "./lib/db"
- 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
-})
+3. remove: MongoDBAdapter
 3. remove:  Promise<MongoClient>
 4. pw: RprydCqlVO2OMy6r
 5. URI: mongodb+srv://lmbsumatraintech:RprydCqlVO2OMy6r@cluster0.yagtxxy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 6. npm install dotenv
 7. .env.local
+
+
+[Directory Hierarchy]
+my-nextjs-project/
+├── components/
+│   ├── Header.js
+│   ├── Footer.js
+│   └── Button.js
+├── app/
+│   ├── layout.js
+│   ├── page.js
+│   ├── about/
+│   │   ├── layout.js
+│   │   └── page.js
+│   └── blog/
+│       └── post/
+│           └── page.js
+├── pages/
+│   ├── api/
+│   │   └── auth/
+│   │       └── [...nextauth].js
+├── public/
+│   └── images/
+├── styles/
+│   └── globals.css
+├── .env.local
+├── next.config.js
+└── package.json
+
+
+[Installed]
+1. npm install dotenv
+2. npm install axios
+3. npm install mongoose
+4. npm install @next-auth/mongodb-adapter --legacy-peer-deps
